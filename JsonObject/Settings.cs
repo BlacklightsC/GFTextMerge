@@ -15,6 +15,6 @@ namespace GFTextMerge.JsonObject
         [JsonProperty(PropertyName = "Override usage")]
         public bool UseOverride { get; set; }
         public List<Content> Contents { get; set; } = new List<Content>();
-        public List<Content> Locales { get; set; } = new List<Content>();
+        public List<LocaleContent> Locales { get; set; } = new List<LocaleContent>();
     }
 }

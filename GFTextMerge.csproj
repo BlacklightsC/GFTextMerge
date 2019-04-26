@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JsonObject\Content.cs" />
+    <Compile Include="JsonObject\LocaleContent.cs" />
     <Compile Include="JsonObject\RegexPreset.cs" />
     <Compile Include="JsonObject\Settings.cs" />
     <Compile Include="Program.cs" />
@@ -66,7 +67,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Content Include="Settings.json" />
+    <Content Include="Settings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Run.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Costura.Fody">
