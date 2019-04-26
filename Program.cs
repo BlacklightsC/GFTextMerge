@@ -336,7 +336,7 @@ namespace GFTextMerge
                     string result = string.Format(pRegex.Replace, dItem);
                     builder.Append(result);
                     if (Settings.MismatchLog)
-                        File.AppendAllText($@".\mismatch\{RemovePathID(pDest)}", $"{result}\r\n");
+                        File.AppendAllText($@".\mismatch\{RemovePathID(pDest)}.txt", $"{result}\r\n");
                 }
                 else builder.AppendFormat(pRegex.Replace, sItem);
 
