@@ -98,18 +98,10 @@ namespace GFTextMerge
 
                     case "Data":
                     {
-                        FileInfo[] sources;
-                        if (Settings.Source == "CN")
-                            sources = TSourceDir.GetFiles($"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
-                        else
-                            sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
-
-                        FileInfo[] dests;
-                        if (Settings.Destination == "CN")
-                            dests = TDestDir.GetFiles($"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
-                        else
-                            dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
-
+                        FileInfo[] sources = TSourceDir.GetFiles(Settings.Source != "CN" ? $"{locale.BaseFileName}_{Settings.Source}-*"
+                                                                                         : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
+                        FileInfo[] dests = TDestDir.GetFiles(Settings.Destination != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}-*"
+                                                                                          : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
                         foreach (var dest in dests)
                             ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
 
@@ -118,7 +110,9 @@ namespace GFTextMerge
                             FileInfo[] datas = TDestDir.GetFiles($"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
                             foreach (var data in datas)
                             {
-                                if (data.Name.Contains(Settings.Destination)) continue;
+                                if (data.Name.Contains(Settings.Destination != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}-"
+                                                                                    : $"{locale.BaseFileName}-")) continue;
+
                                 ClearSingleContent(locale.Regex, data.FullName, Path.Combine(TResultDir.FullName, data.Name));
                             }
                         }
