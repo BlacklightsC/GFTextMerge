@@ -59,9 +59,25 @@ namespace GFTextMerge
                 switch (locale.Name)
                 {
                     case "AVG":
+                    {
+                        FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
+                        FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
+
+                        foreach (var dest in dests)
+                            ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
+
                         if (Settings.RemoveDummy)
-                            ClearContents(locale);
-                        break;
+                        {
+                            FileInfo[] datas = TDestDir.GetFiles($"{locale.BaseFileName}_*", SearchOption.TopDirectoryOnly);
+                            foreach (var data in datas)
+                            {
+                                if (data.Name.Contains(Settings.Destination)) continue;
+
+                                ClearSingleContent(locale.Regex, data.FullName, Path.Combine(TResultDir.FullName, data.Name));
+                            }
+                        }
+                    }
+                    break;
 
                     case "CFG":
                     {
