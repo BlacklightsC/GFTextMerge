@@ -63,8 +63,9 @@ namespace GFTextMerge
                         FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
                         FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
 
-                        foreach (var dest in dests)
-                            ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
+                        if (sources.Length > 0)
+                            foreach (var dest in dests)
+                                ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
 
                         if (Settings.RemoveDummy)
                         {
@@ -118,8 +119,9 @@ namespace GFTextMerge
                                                                                          : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
                         FileInfo[] dests = TDestDir.GetFiles(Settings.Destination != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}-*"
                                                                                           : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
-                        foreach (var dest in dests)
-                            ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
+                        if (sources.Length > 0)
+                            foreach (var dest in dests)
+                                ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
 
                         if (Settings.RemoveDummy)
                         {
