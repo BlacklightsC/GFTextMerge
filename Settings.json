@@ -8,6 +8,7 @@
     {
       "Name": "Description",
       "Delete": false,
+      "Usage": true,
       "Files": [
         "achievement",
         "ally_team",
@@ -93,6 +94,7 @@
     {
       "Name": "Guide",
       "Delete": true,
+      "Usage":  true,
       "Files": [
         "Guide_AutoMission",
         "Guide_AutoMissionTo1_2",
@@ -166,6 +168,7 @@
     {
       "Name": "Lua",
       "Delete": true,
+      "Usage": true,
       "Files": [
         "AVGBackgroundController.lua",
         "AVGController.lua",
@@ -235,6 +238,7 @@
     {
       "Name": "RawCopy",
       "Delete": false,
+      "Usage": true,
       "Files": [
         "_1_1_1",
         "_1_1_2",
@@ -1138,7 +1142,7 @@
       ],
       "Regex": {
         "Search": "(.*)",
-        "PrimaryKey": [ ],
+        "PrimaryKey": [],
         "Replace": "{1}",
         "Empty": ""
       }
@@ -1146,6 +1150,7 @@
     {
       "Name": "Tip",
       "Delete": false,
+      "Usage": true,
       "Files": [
         "TipsNew"
       ],
@@ -1159,6 +1164,7 @@
     {
       "Name": "Unknown",
       "Delete": true,
+      "Usage": true,
       "Files": [
         "ActivityMapConfig",
         "ActivityRankConfig",
@@ -1197,6 +1203,7 @@
     {
       "Name": "Voice",
       "Delete": false,
+      "Usage": true,
       "Files": [
         "KalinaLevelVoice",
         "NewCharacterVoice"
@@ -1213,6 +1220,7 @@
     {
       "Name": "AVG",
       "Delete": false,
+      "Usage": true,
       "BaseFileName": "Language_AVG",
       "Files": [
         "Language_AVG_CN",
@@ -1231,6 +1239,7 @@
     {
       "Name": "CFG",
       "Delete": false,
+      "Usage": false,
       "BaseFileName": "LangCFG",
       "Files": [
         "LangCFG_CN",
@@ -1244,6 +1253,7 @@
     {
       "Name": "Data",
       "Delete": false,
+      "Usage": true,
       "BaseFileName": "LanguageData",
       "Files": [
         "LanguageData",

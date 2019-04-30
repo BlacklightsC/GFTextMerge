@@ -40,6 +40,7 @@ namespace GFTextMerge
 
             foreach (var content in Settings.Contents)
             {
+                if (!content.Usage) continue;
                 if (content.Delete)
                 {
                     if (TDestDir.FullName != TResultDir.FullName) continue;
@@ -56,6 +57,8 @@ namespace GFTextMerge
             }
 
             foreach (var locale in Settings.Locales)
+            {
+                if (!locale.Usage) continue;
                 switch (locale.Name)
                 {
                     case "AVG":
@@ -140,6 +143,7 @@ namespace GFTextMerge
                     }
                     break;
                 }
+            }
             Console.WriteLine("Operation Complete");
         }
 
