@@ -94,21 +94,24 @@ namespace GFTextMerge
                         if (Settings.RemoveDummy)
                         {
                             FileInfo[] CFGs = TDestDir.GetFiles($"{locale.BaseFileName}_*", SearchOption.TopDirectoryOnly);
-                            FileInfo SmallCFG = CFGs[0];
-                            for (int i = 0; i < CFGs.Length; i++)
+                            if (CFGs.Length > 0)
                             {
-                                if (SmallCFG.Length > CFGs[i].Length)
-                                    SmallCFG = CFGs[i];
-                                if (CFGs[i].Name.Contains(Settings.Source)
-                                 || CFGs[i].Name.Contains(Settings.Destination))
-                                    CFGs[i] = null;
-                            }
-                            for (int i = 0; i < CFGs.Length; i++)
-                                if (CFGs[i] != null && CFGs[i] != SmallCFG)
+                                FileInfo SmallCFG = CFGs[0];
+                                for (int i = 0; i < CFGs.Length; i++)
                                 {
-                                    Console.WriteLine($"Clearing \"{Path.GetFileName(CFGs[i].Name)}\"...");
-                                    SmallCFG.CopyTo(Path.Combine(TResultDir.FullName, CFGs[i].Name), true);
+                                    if (SmallCFG.Length > CFGs[i].Length)
+                                        SmallCFG = CFGs[i];
+                                    if (CFGs[i].Name.Contains(Settings.Source)
+                                     || CFGs[i].Name.Contains(Settings.Destination))
+                                        CFGs[i] = null;
                                 }
+                                for (int i = 0; i < CFGs.Length; i++)
+                                    if (CFGs[i] != null && CFGs[i] != SmallCFG)
+                                    {
+                                        Console.WriteLine($"Clearing \"{Path.GetFileName(CFGs[i].Name)}\"...");
+                                        SmallCFG.CopyTo(Path.Combine(TResultDir.FullName, CFGs[i].Name), true);
+                                    }
+                            }
                         }
                     }
                     break;
