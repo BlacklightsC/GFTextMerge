@@ -150,7 +150,7 @@ namespace GFTextMerge
                                                                                                       : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly),
                                                overrides = null;
                                     if (Settings.UseOverride && overrideDir.Exists)
-                                        overrides = overrideDir.GetFiles(Settings.Source != "CN" ? $"{locale.BaseFileName}_{Settings.Source}*"
+                                        overrides = overrideDir.GetFiles(Settings.Source != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}*"
                                                                                                  : $"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
                                     if (sources.Length > 0)
                                         foreach (var dest in dests)
