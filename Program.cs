@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 
 namespace GFTextMerge
 {
+    using AssetBundles;
     using JsonObject;
 
     class Program
@@ -17,134 +18,231 @@ namespace GFTextMerge
         private static DirectoryInfo TSourceDir, TDestDir, TResultDir;
         static void Main(string[] args)
         {
+            string executedFileName = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location);
+            string executedFileNameSpace = string.Empty.PadLeft(executedFileName.Length);
             // 매개변수 부족할 경우 
-            if (args.Length < 3)
+            if (args.Length < 1) goto ParamException;
+            switch (args[0].ToLower())
             {
-                Console.WriteLine($"Usage: {Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location)} <Source> <Destination> <Result>");
-                return;
-            }
-
-            Console.WriteLine("Initializing...");
-
-            // 기본값 설정 생성
-            if (!File.Exists("Settings.json")) File.WriteAllBytes("Settings.json", Properties.Resources.Settings);
-            if (Directory.Exists("mismatch")) Directory.Delete("mismatch", true); Directory.CreateDirectory("mismatch");
-            if (!Directory.Exists("overrides")) Directory.CreateDirectory("overrides");
-            Settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json"));
-
-
-            TSourceDir = new DirectoryInfo(args[0]);
-            TDestDir = new DirectoryInfo(args[1]);
-            TResultDir = new DirectoryInfo(args[2]);
-            if (!TResultDir.Exists) TResultDir.Create();
-
-            foreach (var content in Settings.Contents)
-            {
-                if (!content.Usage) continue;
-                if (content.Delete)
+                default: goto ParamException;
+                case "merge":
                 {
-                    if (TDestDir.FullName != TResultDir.FullName) continue;
-                    foreach (var assetName in content.Files)
+                    if (args.Length < 2)
+                        Console.WriteLine($"Usage: {executedFileName} merge <Source> <Destination>");
+                    else
                     {
-                        foreach (var asset in TSourceDir.GetFiles($"{assetName}-*", SearchOption.TopDirectoryOnly))
-                            asset.Delete();
-                        foreach (var asset in TDestDir.GetFiles($"{assetName}-*", SearchOption.TopDirectoryOnly))
-                            asset.Delete();
-                    }
-                }
-                else if (content.Name == "RawCopy") CloneContents(content);
-                else if (content.Regex != null) ReplaceContents(content);
-            }
+                        Console.WriteLine("Initializing...");
 
-            foreach (var locale in Settings.Locales)
-            {
-                if (!locale.Usage) continue;
-                switch (locale.Name)
-                {
-                    case "AVG":
-                    {
-                        FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
-                        FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
+                        // 기본값 설정 생성
+                        if (!File.Exists("Settings.json")) File.WriteAllBytes("Settings.json", Properties.Resources.Settings);
+                        if (Directory.Exists("mismatch")) Directory.Delete("mismatch", true); Directory.CreateDirectory("mismatch");
+                        if (Directory.Exists("result")) Directory.Delete("result", true); TResultDir = Directory.CreateDirectory("result");
+                        if (!Directory.Exists("overrides")) Directory.CreateDirectory("overrides");
+                        Settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json"));
 
-                        if (sources.Length > 0)
-                            foreach (var dest in dests)
-                                ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
+                        // 매개변수 받은 항목 초기화
+                        TSourceDir = new DirectoryInfo(args[1]);
+                        TDestDir = new DirectoryInfo(args[2]);
 
-                        if (Settings.RemoveDummy)
+                        // 통합 항목 병합
+                        foreach (var content in Settings.Contents)
                         {
-                            FileInfo[] datas = TDestDir.GetFiles($"{locale.BaseFileName}_*", SearchOption.TopDirectoryOnly);
-                            foreach (var data in datas)
+                            if (!content.Usage) continue;
+                            if (content.Delete)
                             {
-                                if (data.Name.Contains(Settings.Destination)) continue;
-
-                                ClearSingleContent(locale.Regex, data.FullName, Path.Combine(TResultDir.FullName, data.Name));
-                            }
-                        }
-                    }
-                    break;
-
-                    case "CFG":
-                    {
-                        FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
-                        FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
-                        if (sources.Length > 0)
-                            foreach (var item in dests)
-                            {
-                                Console.WriteLine($"Copying \"{Path.GetFileName(item.Name)}\"...");
-                                sources[0].CopyTo(Path.Combine(TResultDir.FullName, item.Name), true);
-                            }
-
-                        if (Settings.RemoveDummy)
-                        {
-                            FileInfo[] CFGs = TDestDir.GetFiles($"{locale.BaseFileName}_*", SearchOption.TopDirectoryOnly);
-                            if (CFGs.Length > 0)
-                            {
-                                FileInfo SmallCFG = CFGs[0];
-                                for (int i = 0; i < CFGs.Length; i++)
+                                if (TDestDir.FullName != TResultDir.FullName) continue;
+                                foreach (var assetName in content.Files)
                                 {
-                                    if (SmallCFG.Length > CFGs[i].Length)
-                                        SmallCFG = CFGs[i];
-                                    if (CFGs[i].Name.Contains(Settings.Source)
-                                     || CFGs[i].Name.Contains(Settings.Destination))
-                                        CFGs[i] = null;
+                                    foreach (var asset in TSourceDir.GetFiles($"{assetName}-*", SearchOption.TopDirectoryOnly))
+                                        asset.Delete();
+                                    foreach (var asset in TDestDir.GetFiles($"{assetName}-*", SearchOption.TopDirectoryOnly))
+                                        asset.Delete();
                                 }
-                                for (int i = 0; i < CFGs.Length; i++)
-                                    if (CFGs[i] != null && CFGs[i] != SmallCFG)
+                            }
+                            else if (content.Name == "RawCopy") CloneContents(content);
+                            else if (content.Regex != null) ReplaceContents(content);
+                        }
+
+                        // 언어별 항목 병합
+                        foreach (var locale in Settings.Locales)
+                        {
+                            if (!locale.Usage) continue;
+                            switch (locale.Name)
+                            {
+                                case "AVG":
+                                {
+                                    FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
+                                    FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
+
+                                    if (sources.Length > 0)
+                                        foreach (var dest in dests)
+                                            ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
+
+                                    if (Settings.RemoveDummy)
                                     {
-                                        Console.WriteLine($"Clearing \"{Path.GetFileName(CFGs[i].Name)}\"...");
-                                        SmallCFG.CopyTo(Path.Combine(TResultDir.FullName, CFGs[i].Name), true);
+                                        FileInfo[] datas = TDestDir.GetFiles($"{locale.BaseFileName}_*", SearchOption.TopDirectoryOnly);
+                                        foreach (var data in datas)
+                                        {
+                                            if (data.Name.Contains(Settings.Destination)) continue;
+
+                                            ClearSingleContent(locale.Regex, data.FullName, Path.Combine(TResultDir.FullName, data.Name));
+                                        }
                                     }
+                                }
+                                break;
+
+                                case "CFG":
+                                {
+                                    DirectoryInfo overrideDir = new DirectoryInfo("overrides");
+                                    FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
+                                    FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
+                                    if (Settings.UseOverride && overrideDir.Exists)
+                                    {
+                                        FileInfo[] overrides = overrideDir.GetFiles($"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
+                                        if (overrides.Length > 0)
+                                        {
+                                            foreach (var item in dests)
+                                            {
+                                                Console.WriteLine($"Copying \"{Path.GetFileName(item.Name)}\"...");
+                                                overrides[0].CopyTo(Path.Combine(TResultDir.FullName, item.Name), true);
+                                            }
+                                            continue;
+                                        }
+                                    }
+                                    if (sources.Length > 0)
+                                        foreach (var item in dests)
+                                        {
+                                            Console.WriteLine($"Copying \"{Path.GetFileName(item.Name)}\"...");
+                                            sources[0].CopyTo(Path.Combine(TResultDir.FullName, item.Name), true);
+                                        }
+
+                                    if (Settings.RemoveDummy)
+                                    {
+                                        FileInfo[] CFGs = TDestDir.GetFiles($"{locale.BaseFileName}_*", SearchOption.TopDirectoryOnly);
+                                        if (CFGs.Length > 0)
+                                        {
+                                            FileInfo SmallCFG = CFGs[0];
+                                            for (int i = 0; i < CFGs.Length; i++)
+                                            {
+                                                if (SmallCFG.Length > CFGs[i].Length)
+                                                    SmallCFG = CFGs[i];
+                                                if (CFGs[i].Name.Contains(Settings.Source)
+                                                 || CFGs[i].Name.Contains(Settings.Destination))
+                                                    CFGs[i] = null;
+                                            }
+                                            for (int i = 0; i < CFGs.Length; i++)
+                                                if (CFGs[i] != null && CFGs[i] != SmallCFG)
+                                                {
+                                                    Console.WriteLine($"Clearing \"{Path.GetFileName(CFGs[i].Name)}\"...");
+                                                    SmallCFG.CopyTo(Path.Combine(TResultDir.FullName, CFGs[i].Name), true);
+                                                }
+                                        }
+                                    }
+                                }
+                                break;
+
+                                case "Data":
+                                {
+                                    DirectoryInfo overrideDir = new DirectoryInfo("overrides");
+                                    FileInfo[] sources = TSourceDir.GetFiles(Settings.Source != "CN" ? $"{locale.BaseFileName}_{Settings.Source}-*"
+                                                                                                     : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly),
+                                               dests = TDestDir.GetFiles(Settings.Destination != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}-*"
+                                                                                                      : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly),
+                                               overrides = null;
+                                    if (Settings.UseOverride && overrideDir.Exists)
+                                        overrides = overrideDir.GetFiles(Settings.Source != "CN" ? $"{locale.BaseFileName}_{Settings.Source}*"
+                                                                                                 : $"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
+                                    if (sources.Length > 0)
+                                        foreach (var dest in dests)
+                                            ReplaceSingleContent(locale.Regex
+                                                               , sources[0].FullName
+                                                               , dest.FullName
+                                                               , Path.Combine(TResultDir.FullName, dest.Name)
+                                                               , overrides?.Length > 0 ? overrides[0].FullName : null);
+
+                                    if (Settings.RemoveDummy)
+                                    {
+                                        FileInfo[] datas = TDestDir.GetFiles($"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
+                                        foreach (var data in datas)
+                                        {
+                                            if (data.Name.Contains(Settings.Destination != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}-"
+                                                                                                : $"{locale.BaseFileName}-")) continue;
+
+                                            ClearSingleContent(locale.Regex, data.FullName, Path.Combine(TResultDir.FullName, data.Name));
+                                        }
+                                    }
+                                }
+                                break;
                             }
                         }
+                        Console.WriteLine("Operation Complete");
                     }
                     break;
-
-                    case "Data":
+                }
+                case "pack":
+                {
+                    if (args.Length < 2)
                     {
-                        FileInfo[] sources = TSourceDir.GetFiles(Settings.Source != "CN" ? $"{locale.BaseFileName}_{Settings.Source}-*"
-                                                                                         : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
-                        FileInfo[] dests = TDestDir.GetFiles(Settings.Destination != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}-*"
-                                                                                          : $"{locale.BaseFileName}-*", SearchOption.TopDirectoryOnly);
-                        if (sources.Length > 0)
-                            foreach (var dest in dests)
-                                ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
-
-                        if (Settings.RemoveDummy)
-                        {
-                            FileInfo[] datas = TDestDir.GetFiles($"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
-                            foreach (var data in datas)
+                        Console.WriteLine($"Usage: {executedFileName} pack <Source>");
+                        Console.WriteLine($"       {executedFileNameSpace} pack <Source>.xml <CompressionType>");
+                        Console.WriteLine($"       {executedFileNameSpace}                    LZMA");
+                        Console.WriteLine($"       {executedFileNameSpace}                    LZ4");
+                        Console.WriteLine($"       {executedFileNameSpace}                    LZ4HC");
+                        Console.WriteLine($"       {executedFileNameSpace}                    NONE");
+                    }
+                    else
+                    {
+                        string str = args[1];
+                        AssetBundle assetBundle = new AssetBundle();
+                        if (File.Exists(str))
+                            if (Path.GetExtension(str).ToLower() == ".xml")
                             {
-                                if (data.Name.Contains(Settings.Destination != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}-"
-                                                                                    : $"{locale.BaseFileName}-")) continue;
-
-                                ClearSingleContent(locale.Regex, data.FullName, Path.Combine(TResultDir.FullName, data.Name));
+                                assetBundle.LoadFromXml(str);
+                                if (args.Length > 1)
+                                    switch (args[2].ToLower())
+                                    {
+                                        case "lz4":
+                                            assetBundle.compression = CompressionType.LZ4;
+                                            break;
+                                        case "lz4hc":
+                                            assetBundle.compression = CompressionType.LZ4HC;
+                                            break;
+                                        case "lzma":
+                                            assetBundle.compression = CompressionType.LZMA;
+                                            break;
+                                        case "none":
+                                            assetBundle.compression = CompressionType.NONE;
+                                            break;
+                                    }
+                                assetBundle.Create();
                             }
-                        }
+                            else
+                                try
+                                {
+                                    using (FileStream fileStream = File.Open(str, FileMode.Open))
+                                    using (BinaryReader file = new BinaryReader(fileStream))
+                                    {
+                                        assetBundle.Load(file, str);
+                                        assetBundle.dump();
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
                     }
                     break;
                 }
             }
-            Console.WriteLine("Operation Complete");
+            return;
+            ParamException:
+            Console.WriteLine($"Usage: {executedFileName} merge <Source> <Destination>");
+            Console.WriteLine($"       {executedFileNameSpace} pack <Source>");
+            Console.WriteLine($"       {executedFileNameSpace} pack <Source>.xml <CompressionType>");
+            Console.WriteLine($"       {executedFileNameSpace}                    LZMA");
+            Console.WriteLine($"       {executedFileNameSpace}                    LZ4");
+            Console.WriteLine($"       {executedFileNameSpace}                    LZ4HC");
+            Console.WriteLine($"       {executedFileNameSpace}                    NONE");
         }
 
         private static string RemovePathID(string filename)
@@ -227,7 +325,11 @@ namespace GFTextMerge
                     if (overrides.Length > 0)
                     {
                         foreach (var dest in dests)
+                        {
+                            if (dest == null) continue;
+                            Console.WriteLine($"Copying \"{dest.Name}\"...");
                             overrides[0].CopyTo(Path.Combine(TResultDir.FullName, dest.Name), true);
+                        }
                         continue;
                     }
                 }
@@ -318,7 +420,7 @@ namespace GFTextMerge
                 if (dItem == null) continue;
                 for (int i = 1; i < dItem.Length - 1; i++)
                    if (pRegex.PrimaryKey.IndexOf(i) == -1
-                     && string.IsNullOrWhiteSpace(dItem[i]))
+                    && string.IsNullOrWhiteSpace(dItem[i]))
                     {
                         builder.AppendFormat(pRegex.Empty, dItem);
                         goto Continue;

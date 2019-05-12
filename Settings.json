@@ -1138,7 +1138,8 @@
         "Start9",
         "Start10",
         "Start11",
-        "TheaterGuide"
+        "TheaterGuide",
+        "Tips"
       ],
       "Regex": {
         "Search": "(.*)",
@@ -1194,7 +1195,6 @@
         "PVConfig",
         "PVConfig_h",
         "tableconfig",
-        "Tips",
         "UserAgree",
         "UserAgreement"
       ],
