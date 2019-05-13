@@ -419,8 +419,9 @@ namespace GFTextMerge
             {
                 if (dItem == null) continue;
                 for (int i = 1; i < dItem.Length - 1; i++)
-                   if (pRegex.PrimaryKey.IndexOf(i) == -1
-                    && string.IsNullOrWhiteSpace(dItem[i]))
+                    if (pRegex.PrimaryKey.IndexOf(i) == -1
+                    && (string.IsNullOrWhiteSpace(dItem[i])
+                    ||  dItem[i].Contains("(todo)")))
                     {
                         builder.AppendFormat(pRegex.Empty, dItem);
                         goto Continue;
@@ -452,15 +453,21 @@ namespace GFTextMerge
                     if (oItem != null) sItem = oItem;
                 }
 
-                if (sItem == null)
+                if (sItem != null)
                 {
-                    string result = string.Format(pRegex.Replace, dItem);
-                    builder.Append(result);
-                    if (Settings.MismatchLog)
-                        File.AppendAllText($@".\mismatch\{RemovePathID(pDest)}.txt", $"{result}\r\n");
+                    for (int i = 1; i < sItem.Length - 1; i++)
+                        if (pRegex.PrimaryKey.IndexOf(i) == -1
+                        && (string.IsNullOrWhiteSpace(sItem[i])
+                        || sItem[i].Contains("(todo)")))
+                            goto SourceNotExist;
+                    builder.AppendFormat(pRegex.Replace, sItem);
+                    goto Continue;
                 }
-                else builder.AppendFormat(pRegex.Replace, sItem);
-
+                SourceNotExist:
+                string result = string.Format(pRegex.Replace, dItem);
+                builder.Append(result);
+                if (Settings.MismatchLog)
+                    File.AppendAllText($@".\mismatch\{RemovePathID(pDest)}.txt", $"{result}\r\n");
                 Continue: builder.AppendLine();
                 lines++;
             }
