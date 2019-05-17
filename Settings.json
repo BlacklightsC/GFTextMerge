@@ -94,7 +94,7 @@
     {
       "Name": "Guide",
       "Delete": true,
-      "Usage":  true,
+      "Usage": true,
       "Files": [
         "Guide_AutoMission",
         "Guide_AutoMissionTo1_2",
@@ -179,10 +179,13 @@
         "BattleControllerLite.lua",
         "BattleEnemyCharacterController.lua",
         "BattleManualSkillController.lua",
+        "BattleResultLabelController.lua",
         "BattleUIPauseController.lua",
         "BingoController.lua",
         "CarnivalController.lua",
+        "CommonAudioController.lua",
         "CommonController.lua",
+        "CommonFurnitureListLabelController.lua",
         "CommonLiteMessageController.lua",
         "CommonMessageBoxController.lua",
         "CommonSimulatorSettlementController.lua",
