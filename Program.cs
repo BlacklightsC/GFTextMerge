@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -35,14 +36,45 @@ namespace GFTextMerge
 
                         // 기본값 설정 생성
                         if (!File.Exists("Settings.json")) File.WriteAllBytes("Settings.json", Properties.Resources.Settings);
-                        if (Directory.Exists("mismatch")) Directory.Delete("mismatch", true); Directory.CreateDirectory("mismatch");
-                        if (Directory.Exists("result")) Directory.Delete("result", true); TResultDir = Directory.CreateDirectory("result");
+                        if (Directory.Exists("mismatch")) Directory.Delete("mismatch", true); Thread.Sleep(200); Directory.CreateDirectory("mismatch");
+                        if (Directory.Exists("result")) Directory.Delete("result", true); Thread.Sleep(200); TResultDir = Directory.CreateDirectory("result");
                         if (!Directory.Exists("overrides")) Directory.CreateDirectory("overrides");
+
+                        Thread.Sleep(200);
+
                         Settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("Settings.json"));
 
                         // 매개변수 받은 항목 초기화
                         TSourceDir = new DirectoryInfo(args[1]);
                         TDestDir = new DirectoryInfo(args[2]);
+
+                        List<FileInfo> destFiles = new List<FileInfo>(TDestDir.GetFiles());
+                        for (int i = destFiles.Count - 1; i >= 0; i--)
+                        {
+                            foreach (var content in Settings.Contents)
+                                foreach (var file in content.Files)
+                                    if (file == RemovePathID(destFiles[i].Name))
+                                    {
+                                        destFiles.RemoveAt(i);
+                                        goto Continue;
+                                    }
+                            foreach (var locale in Settings.Locales)
+                                foreach (var file in locale.Files)
+                                    if (file == RemovePathID(destFiles[i].Name))
+                                    {
+                                        destFiles.RemoveAt(i);
+                                        goto Continue;
+                                    }
+                                Continue:;
+                        }
+                        if (destFiles.Count > 0)
+                        {
+                            StringBuilder builder = new StringBuilder();
+                            foreach (var item in destFiles)
+                                builder.AppendLine(RemovePathID(item.Name));
+                            if (Settings.MismatchLog)
+                                File.AppendAllText($@".\mismatch\Unexcepted Files.txt", $"{builder.ToString()}\r\n");
+                        }
 
                         // 통합 항목 병합
                         foreach (var content in Settings.Contents)
