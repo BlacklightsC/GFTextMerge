@@ -353,7 +353,7 @@ namespace GFTextMerge
                          overrides = null;
                 if (Settings.UseOverride && overrideDir.Exists)
                 {
-                    overrides = overrideDir.GetFiles($"{item}*", SearchOption.TopDirectoryOnly);
+                    overrides = overrideDir.GetFiles($"{item}*", SearchOption.AllDirectories);
                     if (overrides.Length > 0)
                     {
                         foreach (var dest in dests)
@@ -399,7 +399,7 @@ namespace GFTextMerge
                              dests = TDestDir.GetFiles($"{item}-*", SearchOption.TopDirectoryOnly),
                          overrides = null;
                 if (Settings.UseOverride && overrideDir.Exists)
-                    overrides = overrideDir.GetFiles($"{item}*", SearchOption.TopDirectoryOnly);
+                    overrides = overrideDir.GetFiles($"{item}*", SearchOption.AllDirectories);
 
                 if (sources.Length > 1 || dests.Length > 1)
                 {
