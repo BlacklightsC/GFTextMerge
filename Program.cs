@@ -103,12 +103,25 @@ namespace GFTextMerge
                             {
                                 case "AVG":
                                 {
-                                    FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly);
-                                    FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
+                                    DirectoryInfo overrideDir = new DirectoryInfo("overrides");
+                                    FileInfo[] sources = TSourceDir.GetFiles($"{locale.BaseFileName}_{Settings.Source}-*", SearchOption.TopDirectoryOnly),
+                                               dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly),
+                                               overrides = null;
+                                    List<string> overridePaths = null;
+                                    if (Settings.UseOverride && overrideDir.Exists)
+                                    {
+                                        overrides = overrideDir.GetFiles($"{locale.BaseFileName}*", SearchOption.AllDirectories);
+                                        if (overrides.Length > 0)
+                                        {
+                                            overridePaths = new List<string>();
+                                            foreach (var item in overrides)
+                                                overridePaths.Add(item.FullName);
+                                        }
+                                    }
 
                                     if (sources.Length > 0)
                                         foreach (var dest in dests)
-                                            ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name));
+                                            ReplaceSingleContent(locale.Regex, sources[0].FullName, dest.FullName, Path.Combine(TResultDir.FullName, dest.Name), overridePaths?.Count > 0 ? overridePaths.ToArray() : null);
 
                                     if (Settings.RemoveDummy)
                                     {
@@ -130,7 +143,7 @@ namespace GFTextMerge
                                     FileInfo[] dests = TDestDir.GetFiles($"{locale.BaseFileName}_{Settings.Destination}-*", SearchOption.TopDirectoryOnly);
                                     if (Settings.UseOverride && overrideDir.Exists)
                                     {
-                                        FileInfo[] overrides = overrideDir.GetFiles($"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
+                                        FileInfo[] overrides = overrideDir.GetFiles($"{locale.BaseFileName}*", SearchOption.AllDirectories);
                                         if (overrides.Length > 0)
                                         {
                                             foreach (var item in dests)
@@ -183,14 +196,14 @@ namespace GFTextMerge
                                                overrides = null;
                                     if (Settings.UseOverride && overrideDir.Exists)
                                         overrides = overrideDir.GetFiles(Settings.Source != "CN" ? $"{locale.BaseFileName}_{Settings.Destination}*"
-                                                                                                 : $"{locale.BaseFileName}*", SearchOption.TopDirectoryOnly);
+                                                                                                 : $"{locale.BaseFileName}*", SearchOption.AllDirectories);
                                     if (sources.Length > 0)
                                         foreach (var dest in dests)
                                             ReplaceSingleContent(locale.Regex
                                                                , sources[0].FullName
                                                                , dest.FullName
                                                                , Path.Combine(TResultDir.FullName, dest.Name)
-                                                               , overrides?.Length > 0 ? overrides[0].FullName : null);
+                                                               , overrides?.Length > 0 ? new string[] { overrides[0].FullName } : null);
 
                                     if (Settings.RemoveDummy)
                                     {
@@ -398,8 +411,16 @@ namespace GFTextMerge
                 FileInfo[] sources = TSourceDir.GetFiles($"{item}-*", SearchOption.TopDirectoryOnly),
                              dests = TDestDir.GetFiles($"{item}-*", SearchOption.TopDirectoryOnly),
                          overrides = null;
+                List<string> overridePaths = null;
                 if (Settings.UseOverride && overrideDir.Exists)
+                {
                     overrides = overrideDir.GetFiles($"{item}*", SearchOption.AllDirectories);
+                    if(overrides.Length > 0)
+                    {
+                        overridePaths = new List<string>();
+                        foreach (var file in overrides) overridePaths.Add(file.FullName);
+                    }
+                }
 
                 if (sources.Length > 1 || dests.Length > 1)
                 {
@@ -418,14 +439,14 @@ namespace GFTextMerge
                                            , source.FullName
                                            , dest.FullName
                                            , Path.Combine(TResultDir.FullName, dest.Name)
-                                           , overrides?.Length > 0 ? overrides[0].FullName : null);
+                                           , overridePaths?.Count > 0 ? overridePaths.ToArray() : null);
                     }
                     break;
                 }
             }
         }
 
-        public static void ReplaceSingleContent(RegexPreset pRegex, string pSource, string pDest, string pResult, string pOverride = null)
+        public static void ReplaceSingleContent(RegexPreset pRegex, string pSource, string pDest, string pResult, string[] pOverride = null)
         {
             if (pRegex == null) throw new ArgumentNullException(nameof(pRegex));
 
@@ -441,8 +462,9 @@ namespace GFTextMerge
             if (Settings.UseOverride && pOverride != null)
             {
                 oList = new List<string[]>();
-                foreach (string item in File.ReadAllLines(pOverride))
-                    oList.Add(Regex.Split(item, pRegex.Search));
+                foreach (string path in pOverride)
+                    foreach (string item in File.ReadAllLines(path))
+                        oList.Add(Regex.Split(item, pRegex.Search));
             }
 
             int lines = 1;
